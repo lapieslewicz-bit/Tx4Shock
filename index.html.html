@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patient Assessment — EMS Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal:        #0F6E56;
+    --teal-light:  #E1F5EE;
+    --teal-mid:    #1D9E75;
+    --coral:       #993C1D;
+    --coral-light: #FAECE7;
+    --red:         #A32D2D;
+    --red-light:   #FCEBEB;
+    --amber:       #854F0B;
+    --amber-light: #FAEEDA;
+    --green:       #3B6D11;
+    --green-light: #EAF3DE;
+    --purple:      #534AB7;
+    --purple-light:#EEEDFE;
+    --blue:        #185FA5;
+    --blue-light:  #E6F1FB;
+    --gray:        #5F5E5A;
+    --gray-light:  #F1EFE8;
+    --gray-mid:    #D3D1C7;
+    --bg:          #F7F6F2;
+    --text:        #1a1a18;
+    --text-muted:  #6b6a65;
+    --white:       #ffffff;
+    --radius:      8px;
+    --shadow:      0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--teal);
+    color: white;
+    padding: 20px 24px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  header h1 span {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: 0.05em;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 180px;
+    max-width: 320px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  #search {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.12);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  #search::placeholder { color: rgba(255,255,255,0.5); }
+  #search:focus { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.18); }
+
+  .btn {
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.12);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.45); }
+  .btn.active { background: white; color: var(--teal); border-color: white; }
+
+  /* ── MAIN ── */
+  main { padding: 24px 20px 60px; max-width: 900px; margin: 0 auto; }
+
+  /* ── SECTION HEADER ── */
+  .section-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    margin-top: 20px;
+  }
+  .section-hdr:first-of-type { margin-top: 0; }
+  .section-hdr .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .section-hdr h2 { font-size: 14px; font-weight: 600; }
+  .section-hdr p  { font-size: 12px; opacity: 0.75; margin-top: 1px; }
+
+  .hdr-teal   { background: var(--teal);   color: white; }
+  .hdr-coral  { background: var(--coral);  color: white; }
+  .hdr-purple { background: var(--purple); color: white; }
+
+  /* ── STEP GRID ── */
+  .step-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .step-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .step-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+  /* ── NODE CARD ── */
+  .node {
+    background: white;
+    border: 1.5px solid var(--gray-mid);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+    position: relative;
+    user-select: none;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .node.teal   { background: var(--teal-light);   border-color: var(--teal);   }
+  .node.coral  { background: var(--coral-light);  border-color: var(--coral);  }
+  .node.red    { background: var(--red-light);    border-color: var(--red);    }
+  .node.amber  { background: var(--amber-light);  border-color: var(--amber);  }
+  .node.green  { background: var(--green-light);  border-color: var(--green);  }
+  .node.purple { background: var(--purple-light); border-color: var(--purple); }
+  .node.blue   { background: var(--blue-light);   border-color: var(--blue);   }
+  .node.gray   { background: var(--gray-light);   border-color: var(--gray);   }
+
+  .node-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .node-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 3px;
+  }
+  .node-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .node .expand-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .node.open .expand-icon { transform: rotate(45deg); background: rgba(0,0,0,0.12); }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.2s;
+    opacity: 0;
+  }
+  .detail-panel.open {
+    max-height: 600px;
+    opacity: 1;
+  }
+  .detail-inner {
+    background: white;
+    border: 1.5px solid var(--gray-mid);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .detail-inner h4 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .detail-inner ul { padding-left: 16px; }
+  .detail-inner li { margin-bottom: 4px; }
+  .detail-inner .mnemonic {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    background: var(--gray-light);
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    line-height: 1.8;
+  }
+  .detail-inner .mnemonic b { color: var(--teal); font-weight: 600; }
+
+  /* ── CONNECTOR ARROWS ── */
+  .arrow-down {
+    text-align: center;
+    color: var(--gray);
+    font-size: 18px;
+    line-height: 1;
+    margin: 4px 0;
+  }
+  .arrow-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 2px 0;
+  }
+
+  /* ── NOTE BOX ── */
+  .note-box {
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin: 8px 0;
+    font-size: 13px;
+    border: 1.5px solid;
+  }
+  .note-box.amber { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+  .note-box.gray  { background: var(--gray-light);  border-color: var(--gray-mid); color: var(--gray); }
+  .note-box strong { font-weight: 600; }
+
+  /* ── CAB ── */
+  .cab-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+  .cab-item {
+    text-align: center;
+    background: white;
+    border: 1.5px solid var(--gray-mid);
+    border-radius: var(--radius);
+    padding: 10px;
+  }
+  .cab-letter {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--teal);
+    line-height: 1;
+  }
+  .cab-word { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── SYSTEMS GRID ── */
+  .systems-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin: 8px 0;
+  }
+  .system-chip {
+    background: white;
+    border: 1.5px solid var(--gray-mid);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .system-chip:hover { background: var(--teal-light); border-color: var(--teal); color: var(--teal); }
+
+  /* ── VITAL SIGNS PILL ── */
+  .vitals-pill {
+    text-align: center;
+    background: var(--teal);
+    color: white;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 10px auto;
+    max-width: 220px;
+  }
+
+  /* ── REASSESS GRID ── */
+  .reassess-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 8px 0; }
+  .reassess-item {
+    background: var(--teal-light);
+    border: 1.5px solid var(--teal);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal);
+  }
+
+  /* ── SEARCH HIGHLIGHT ── */
+  .highlight { background: #FFE066; border-radius: 2px; padding: 0 1px; }
+  .node.search-hidden { display: none; }
+  .node.search-match { border-color: #c8a000 !important; box-shadow: 0 0 0 2px #FFE06660; }
+
+  /* ── QUIZ MODE ── */
+  .quiz-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .quiz-overlay.active { display: flex; }
+  .quiz-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .quiz-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .quiz-q {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 20px;
+  }
+  .quiz-opts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .quiz-opt {
+    padding: 12px 16px;
+    border: 1.5px solid var(--gray-mid);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    text-align: left;
+    background: white;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .quiz-opt:hover { background: var(--gray-light); border-color: var(--gray); }
+  .quiz-opt.correct { background: var(--green-light); border-color: var(--green); color: var(--green); pointer-events: none; }
+  .quiz-opt.wrong   { background: var(--red-light);   border-color: var(--red);   color: var(--red);   pointer-events: none; }
+  .quiz-opt.reveal  { background: var(--blue-light);  border-color: var(--blue);  color: var(--blue);  pointer-events: none; }
+  .quiz-feedback { font-size: 13px; line-height: 1.6; color: var(--text-muted); margin-bottom: 16px; min-height: 40px; }
+  .quiz-actions { display: flex; gap: 8px; }
+  .quiz-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--gray-mid);
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .quiz-btn:hover { background: var(--gray-light); }
+  .quiz-btn.primary { background: var(--teal); color: white; border-color: var(--teal); }
+  .quiz-btn.primary:hover { background: var(--teal-mid); }
+  .quiz-score {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    margin-bottom: 4px;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--gray-light);
+    border-radius: 2px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--teal);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  @media (max-width: 600px) {
+    .systems-grid { grid-template-columns: repeat(2,1fr); }
+    .step-grid.cols-3 { grid-template-columns: 1fr; }
+    .cab-grid { grid-template-columns: repeat(3,1fr); }
+    .reassess-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Patient Assessment <span>EMS REFERENCE</span></h1>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="search" type="text" placeholder="Search steps, terms…" oninput="doSearch(this.value)">
+    </div>
+    <button class="btn" id="expand-all-btn" onclick="toggleExpandAll()">Expand all</button>
+    <button class="btn" id="quiz-btn" onclick="startQuiz()">Quiz mode ↗</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══ SCENE SIZE-UP ══ -->
+  <div class="section-hdr hdr-teal">
+    <div>
+      <div class="badge" style="background:rgba(255,255,255,0.15);color:white;">Phase 1</div>
+      <h2>Scene Size-Up</h2>
+      <p>Big decisions that affect the entire call</p>
+    </div>
+  </div>
+
+  <div class="step-grid" id="scene-grid">
+
+    <div class="node gray" onclick="toggleNode(this)">
+      <div class="node-num">Step 01</div>
+      <div class="node-title">Is it SAFE?</div>
+      <div class="node-sub">BSI / scene safety</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>Scene safety checklist</h4>
+      <ul>
+        <li>Don BSI (gloves, mask, eye protection as needed)</li>
+        <li>Scan for hazards: traffic, downed wires, fire, violence, unstable structures</li>
+        <li>Identify potential for violence — trust your instincts</li>
+        <li>If unsafe, do NOT enter — stage and wait for police/fire</li>
+        <li>Re-evaluate safety throughout the call</li>
+      </ul>
+    </div></div>
+
+    <div class="node gray" onclick="toggleNode(this)">
+      <div class="node-num">Step 02</div>
+      <div class="node-title">Do I need HELP?</div>
+      <div class="node-sub">Call early — before you need it</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>Call for additional resources</h4>
+      <ul>
+        <li><strong>Police</strong> — violence, crime scene, crowd control</li>
+        <li><strong>ALS</strong> — critical patient, ALS interventions needed</li>
+        <li><strong>Fire Dept</strong> — entrapment, structural collapse, fire</li>
+        <li><strong>Extrication</strong> — patient trapped in vehicle/machinery</li>
+        <li><strong>Haz Mat</strong> — chemical, biological, radiological exposure</li>
+      </ul>
+      <div class="note-box amber" style="margin-top:10px;font-size:12px;">Call early. It is much easier to cancel help you don't need than to wait for help that's delayed.</div>
+    </div></div>
+
+    <div class="node gray" onclick="toggleNode(this)">
+      <div class="node-num">Step 03</div>
+      <div class="node-title">How many PATIENTS?</div>
+      <div class="node-sub">Triage if multiple</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>Patient count</h4>
+      <ul>
+        <li>Quickly scan the scene — look beyond the obvious</li>
+        <li>If multiple patients → enter <strong>Triage Mode</strong> (START triage)</li>
+        <li>Call for mutual aid immediately if overwhelmed</li>
+        <li>Document number of patients for dispatch</li>
+      </ul>
+    </div></div>
+
+    <div class="node gray" onclick="toggleNode(this)">
+      <div class="node-num">Step 04</div>
+      <div class="node-title">OBSERVE the patient</div>
+      <div class="node-sub">MOI (c-spine?) or NOI</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>Mechanism / Nature of illness</h4>
+      <ul>
+        <li><strong>MOI</strong> — Mechanism of Injury: how did the trauma occur? Assess c-spine risk.</li>
+        <li><strong>NOI</strong> — Nature of Illness: what is the medical problem?</li>
+        <li>High MOI = high index of suspicion for hidden injuries</li>
+        <li>Get a general sense of problems and priorities from your first look</li>
+      </ul>
+    </div></div>
+
+  </div>
+
+  <!-- ══ PRIMARY ASSESSMENT ══ -->
+  <div class="section-hdr hdr-coral" style="margin-top:24px;">
+    <div>
+      <div class="badge" style="background:rgba(255,255,255,0.15);color:white;">Phase 2</div>
+      <h2>Primary Assessment</h2>
+      <p>What immediate actions keep the patient alive?</p>
+    </div>
+  </div>
+
+  <div class="node coral" onclick="toggleNode(this)" style="margin-bottom:6px;">
+    <div class="node-title">General Impression &amp; Chief Complaint</div>
+    <div class="node-sub">Your first look at the patient — get a sense of problems and priorities</div>
+    <div class="expand-icon">+</div>
+  </div>
+  <div class="detail-panel"><div class="detail-inner">
+    <h4>General impression</h4>
+    <ul>
+      <li>Assess from the doorway: age, sex, level of distress</li>
+      <li>Is the patient sick-looking (ill, pale, diaphoretic)?</li>
+      <li>Position of comfort or distress?</li>
+      <li>Chief complaint: "What's the matter today?" in patient's own words</li>
+      <li>Does the environment give clues (medications, medical equipment, injury scene)?</li>
+    </ul>
+  </div></div>
+
+  <div class="arrow-label">↓ HOW SICK IS YOUR PATIENT? ↓</div>
+
+  <div class="step-grid cols-3">
+
+    <div class="node red" onclick="toggleNode(this)">
+      <div class="node-title">Crashing / Unstable</div>
+      <div class="node-sub">Load and go immediately</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>Crashing patient</h4>
+      <ul>
+        <li>Unresponsive / agonal breathing</li>
+        <li>Severe respiratory distress</li>
+        <li>Uncontrolled major hemorrhage</li>
+        <li>Signs of shock (pale, diaphoretic, BP dropping)</li>
+      </ul>
+      <div class="note-box amber" style="margin-top:10px;font-size:12px;"><strong>Action:</strong> Load and go — stabilize en route. Perform only life-saving interventions on scene.</div>
+    </div></div>
+
+    <div class="node amber" onclick="toggleNode(this)">
+      <div class="node-title">Time Sensitive Issue</div>
+      <div class="node-sub">MI / Stroke — transport promptly</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>Time-sensitive conditions</h4>
+      <ul>
+        <li><strong>MI</strong>: chest pain, diaphoresis, radiation to arm/jaw</li>
+        <li><strong>Stroke (BE-FAST)</strong>: Balance, Eyes, Face droop, Arm drift, Speech, Time</li>
+        <li><strong>Sepsis</strong>: fever/hypothermia, altered mentation, hypotension</li>
+        <li><strong>Severe hypoglycemia</strong>, <strong>Eclampsia</strong></li>
+      </ul>
+      <div class="note-box amber" style="margin-top:10px;font-size:12px;"><strong>Action:</strong> Transport promptly. Limited scene time. Notify receiving hospital early.</div>
+    </div></div>
+
+    <div class="node green" onclick="toggleNode(this)">
+      <div class="node-title">Stable / Not Time Sensitive</div>
+      <div class="node-sub">Secondary assessment on scene</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>Stable patient</h4>
+      <ul>
+        <li>Alert, talking, normal skin signs</li>
+        <li>Adequate airway, breathing, and circulation</li>
+        <li>No immediate life threat identified</li>
+      </ul>
+      <div class="note-box gray" style="margin-top:10px;font-size:12px;"><strong>Action:</strong> Perform thorough secondary assessment on scene before or during transport.</div>
+    </div></div>
+
+  </div>
+
+  <div class="note-box amber" style="margin:10px 0;">
+    <strong>NOTE — AHA C-A-B approach:</strong> When patient appears lifeless, prioritize Circulation before Airway and Breathing.
+    <div class="cab-grid">
+      <div class="cab-item"><div class="cab-letter">C</div><div class="cab-word">Circulation</div></div>
+      <div class="cab-item"><div class="cab-letter">A</div><div class="cab-word">Airway</div></div>
+      <div class="cab-item"><div class="cab-letter">B</div><div class="cab-word">Breathing</div></div>
+    </div>
+  </div>
+
+  <!-- ══ SECONDARY ASSESSMENT ══ -->
+  <div class="section-hdr hdr-purple" style="margin-top:24px;">
+    <div>
+      <div class="badge" style="background:rgba(255,255,255,0.15);color:white;">Phase 3</div>
+      <h2>Secondary Assessment</h2>
+      <p>History, physical exam, and vital signs to determine treatment</p>
+    </div>
+  </div>
+
+  <div class="step-grid cols-2" style="margin-bottom:8px;">
+    <div class="node blue" onclick="toggleNode(this)">
+      <div class="node-title">Medical patient</div>
+      <div class="node-sub">Start with history (SAMPLE)</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>SAMPLE history</h4>
+      <div class="mnemonic">
+        <b>S</b>igns &amp; Symptoms<br>
+        <b>A</b>llergies<br>
+        <b>M</b>edications<br>
+        <b>P</b>ertinent past history<br>
+        <b>L</b>ast oral intake<br>
+        <b>E</b>vents leading to illness
+      </div>
+      <ul style="margin-top:10px;">
+        <li>Also use <strong>OPQRST</strong> for pain: Onset, Provocation, Quality, Radiation, Severity, Time</li>
+      </ul>
+    </div></div>
+
+    <div class="node coral" onclick="toggleNode(this)">
+      <div class="node-title">Trauma patient</div>
+      <div class="node-sub">Start with physical exam (head-to-toe)</div>
+      <div class="expand-icon">+</div>
+    </div>
+    <div class="detail-panel"><div class="detail-inner">
+      <h4>Rapid trauma exam — DCAP-BTLS</h4>
+      <div class="mnemonic">
+        <b>D</b>eformities<br>
+        <b>C</b>ontusions<br>
+        <b>A</b>brasions<br>
+        <b>P</b>enetrations<br>
+        <b>B</b>urns<br>
+        <b>T</b>enderness<br>
+        <b>L</b>acerations<br>
+        <b>S</b>welling
+      </div>
+      <ul style="margin-top:10px;">
+        <li>Assess head → neck → chest → abdomen → pelvis → extremities → back</li>
+        <li>C-spine control if MOI warrants it</li>
+      </ul>
+    </div></div>
+  </div>
+
+  <div class="node purple" onclick="toggleNode(this)" style="margin-bottom:6px;">
+    <div class="node-title">Assess body systems based on chief complaint</div>
+    <div class="node-sub">Adjust pace and location of exam based on patient condition</div>
+    <div class="expand-icon">+</div>
+  </div>
+  <div class="detail-panel"><div class="detail-inner">
+    <h4>Approach</h4>
+    <p>Focus your exam on the systems most likely involved in the chief complaint. Don't perform a head-to-toe on a stable patient with a sprained ankle — prioritize findings that will change your treatment.</p>
+  </div></div>
+
+  <div class="systems-grid">
+    <div class="system-chip" onclick="showSystem('cardiovascular')">Cardiovascular</div>
+    <div class="system-chip" onclick="showSystem('respiratory')">Respiratory</div>
+    <div class="system-chip" onclick="showSystem('neurological')">Neurological</div>
+    <div class="system-chip" onclick="showSystem('musculoskeletal')">Musculoskeletal</div>
+    <div class="system-chip" onclick="showSystem('endocrine')">Endocrine</div>
+    <div class="system-chip" onclick="showSystem('integumentary')">Integumentary</div>
+    <div class="system-chip" onclick="showSystem('gigu')">GI / GU</div>
+    <div class="system-chip" onclick="showSystem('reproductive')">Reproductive</div>
+  </div>
+
+  <div id="system-detail" class="detail-inner" style="display:none;margin:6px 0 10px;"></div>
+
+  <div class="vitals-pill">+ Vital Signs</div>
+
+  <div class="node blue" onclick="toggleNode(this)" style="margin-bottom:6px;">
+    <div class="node-title">Differential Diagnosis</div>
+    <div class="node-sub">Develop a mental list of causes → rule in/out → match protocol → call medical direction if needed</div>
+    <div class="expand-icon">+</div>
+  </div>
+  <div class="detail-panel"><div class="detail-inner">
+    <h4>Differential diagnosis process</h4>
+    <ul>
+      <li>Generate list of possible conditions based on presentation</li>
+      <li>Use history, exam findings, and vitals to rule each in or out</li>
+      <li>Match suspected condition to appropriate protocol</li>
+      <li>Call Medical Direction if outside protocol or uncertain</li>
+      <li>Communicate findings to receiving hospital</li>
+    </ul>
+  </div></div>
+
+  <!-- ══ REASSESSMENT ══ -->
+  <div class="section-hdr hdr-teal" style="margin-top:24px;">
+    <div>
+      <div class="badge" style="background:rgba(255,255,255,0.15);color:white;">Phase 4</div>
+      <h2>Reassessment</h2>
+      <p>Is the patient getting better, worse, or staying the same?</p>
+    </div>
+  </div>
+
+  <div class="reassess-grid">
+    <div class="reassess-item">Patient complaint</div>
+    <div class="reassess-item">Vital signs &amp; mental status</div>
+    <div class="reassess-item">Treatment provided</div>
+  </div>
+
+  <div class="note-box gray">
+    <strong>Reassessment intervals:</strong> Stable patient — every <strong>15 minutes</strong> &nbsp;|&nbsp; Unstable patient — every <strong>5 minutes</strong>
+  </div>
+
+</main>
+
+<!-- ══ QUIZ OVERLAY ══ -->
+<div class="quiz-overlay" id="quiz-overlay">
+  <div class="quiz-card">
+    <div class="quiz-score" id="quiz-score">0 / 0</div>
+    <div class="progress-bar"><div class="progress-fill" id="quiz-progress" style="width:0%"></div></div>
+    <div class="quiz-meta" id="quiz-meta">Question 1 of 10</div>
+    <div class="quiz-q" id="quiz-q"></div>
+    <div class="quiz-opts" id="quiz-opts"></div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+    <div class="quiz-actions">
+      <button class="quiz-btn" onclick="closeQuiz()">Exit quiz</button>
+      <button class="quiz-btn primary" id="quiz-next" onclick="nextQuestion()" style="display:none;">Next question →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── EXPAND / COLLAPSE ──
+function toggleNode(node) {
+  const panel = node.nextElementSibling;
+  if (!panel || !panel.classList.contains('detail-panel')) return;
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  node.classList.toggle('open', !isOpen);
+}
+
+let allExpanded = false;
+function toggleExpandAll() {
+  allExpanded = !allExpanded;
+  document.querySelectorAll('.detail-panel').forEach(p => p.classList.toggle('open', allExpanded));
+  document.querySelectorAll('.node').forEach(n => {
+    if (n.nextElementSibling && n.nextElementSibling.classList.contains('detail-panel'))
+      n.classList.toggle('open', allExpanded);
+  });
+  document.getElementById('expand-all-btn').textContent = allExpanded ? 'Collapse all' : 'Expand all';
+}
+
+// ── SYSTEM DETAILS ──
+const systemData = {
+  cardiovascular: {
+    title: 'Cardiovascular assessment',
+    items: ['Chest pain, pressure, or tightness', 'Palpitations or irregular heartbeat', 'Syncope or pre-syncope', 'Edema (peripheral)', 'JVD (jugular venous distension)', 'Skin: pale, cyanotic, diaphoretic', 'Pulses: rate, rhythm, quality, equality', 'Capillary refill > 2 seconds']
+  },
+  respiratory: {
+    title: 'Respiratory assessment',
+    items: ['Shortness of breath, dyspnea', 'Respiratory rate, depth, and effort', 'Accessory muscle use, retractions', 'Breath sounds: clear, wheeze, crackles, absent', 'Cough, sputum production', 'SpO2 and skin color', 'Ability to speak in full sentences', 'Tripod positioning']
+  },
+  neurological: {
+    title: 'Neurological assessment',
+    items: ['Level of consciousness (AVPU or GCS)', 'Orientation: person, place, time, event', 'Pupils: PERRL, size, reactivity', 'Focal deficits: facial droop, arm drift, speech', 'Headache, vision changes', 'Seizure activity (onset, duration, postictal)', 'Grip strength and equality', 'BE-FAST for stroke screening']
+  },
+  musculoskeletal: {
+    title: 'Musculoskeletal assessment',
+    items: ['Deformity, angulation, instability', 'DCAP-BTLS on affected areas', 'Neurovascular status: pulse, sensation, movement (PSM) distal to injury', 'Joint range of motion', 'Point tenderness on palpation', 'Crepitus on movement', 'Weight bearing ability']
+  },
+  endocrine: {
+    title: 'Endocrine assessment',
+    items: ['Blood glucose level (critical — check on all AMS patients)', 'Signs of hypoglycemia: diaphoresis, shakiness, altered mental status, cool/pale skin', 'Signs of hyperglycemia: Kussmaul respirations, fruity breath, dry/warm skin, gradual AMS', 'Thyroid storm: high fever, extreme tachycardia, agitation', 'Adrenal crisis: profound weakness, hypotension, N/V', 'Medications: insulin, metformin, steroids, levothyroxine', 'History of diabetes, thyroid disease, steroid use']
+  },
+  integumentary: {
+    title: 'Integumentary (skin) assessment',
+    items: ['Color: normal, pale, flushed, cyanotic, jaundiced, mottled', 'Temperature: warm, cool, hot', 'Moisture: dry, diaphoretic, clammy', 'Turgor: tenting = dehydration', 'Lesions, rashes, track marks, wounds', 'Capillary refill time (< 2 sec normal)', 'Edema: pitting vs non-pitting, location']
+  },
+  gigu: {
+    title: 'GI / GU assessment',
+    items: ['Abdominal pain: location, onset, character (OPQRST)', 'Nausea, vomiting, diarrhea', 'Last bowel movement', 'Abdominal guarding or rigidity', 'Distension', 'GI bleeding: hematemesis, melena, hematochezia', 'Urinary complaints: dysuria, frequency, blood in urine', 'Last urination, urine color']
+  },
+  reproductive: {
+    title: 'Reproductive assessment',
+    items: ['LMP (last menstrual period) for all females of childbearing age', 'Possibility of pregnancy (urine or serum hCG)', 'Vaginal bleeding: amount, color, clots', 'Pelvic pain or pressure', 'Signs of ectopic pregnancy: unilateral pain, spotting, syncope', 'OB emergencies: placenta previa, abruption, eclampsia (BE-AWARE)', 'Sexual assault — preserve evidence, treat injuries']
+  }
+};
+
+function showSystem(key) {
+  const d = systemData[key];
+  const el = document.getElementById('system-detail');
+  el.style.display = 'block';
+  el.innerHTML = `<h4>${d.title}</h4><ul>${d.items.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── SEARCH ──
+function doSearch(query) {
+  const q = query.trim().toLowerCase();
+  document.querySelectorAll('.node').forEach(node => {
+    const text = node.textContent.toLowerCase();
+    if (!q) {
+      node.classList.remove('search-hidden', 'search-match');
+    } else if (text.includes(q)) {
+      node.classList.remove('search-hidden');
+      node.classList.add('search-match');
+    } else {
+      node.classList.add('search-hidden');
+      node.classList.remove('search-match');
+    }
+  });
+}
+
+// ── QUIZ ──
+const quizData = [
+  { q: 'What is the FIRST step in Scene Size-Up?', opts: ['Call for ALS backup', 'Ensure scene safety and BSI', 'Determine number of patients', 'Observe MOI or NOI'], ans: 1, exp: 'Scene safety (BSI/PPE) is always step one — you cannot help anyone if you become a patient yourself.' },
+  { q: 'A patient is found unresponsive with agonal breathing. According to AHA guidelines, which approach is used?', opts: ['A-B-C (Airway first)', 'C-A-B (Circulation first)', 'B-C-A (Breathing first)', 'A-C-B'], ans: 1, exp: 'The AHA updated guidelines to C-A-B for patients who appear lifeless, prioritizing chest compressions.' },
+  { q: 'For a MEDICAL patient, secondary assessment begins with:', opts: ['Physical head-to-toe exam', 'Vital signs', 'History (SAMPLE)', 'Differential diagnosis'], ans: 2, exp: 'Medical patients start with history (SAMPLE/OPQRST) — the complaint usually guides which body systems to assess.' },
+  { q: 'For a TRAUMA patient, secondary assessment begins with:', opts: ['History (SAMPLE)', 'Physical exam (DCAP-BTLS)', 'Vital signs', 'Differential diagnosis'], ans: 1, exp: 'Trauma patients start with a rapid physical exam to find life threats — hidden injuries can be missed if you only take history.' },
+  { q: 'What does the mnemonic SAMPLE stand for (first letter)?', opts: ['Signs/symptoms', 'Scene safety', 'Shock index', 'Skin assessment'], ans: 0, exp: 'S = Signs & Symptoms — what the patient is experiencing right now.' },
+  { q: 'How often should you reassess an UNSTABLE patient?', opts: ['Every 15 minutes', 'Every 10 minutes', 'Every 5 minutes', 'Only once before arrival'], ans: 2, exp: 'Unstable patients are reassessed every 5 minutes. Stable patients every 15 minutes.' },
+  { q: 'Which of these is classified as a TIME-SENSITIVE issue?', opts: ['Sprained ankle', 'Mild nausea', 'Suspected stroke', 'Minor laceration'], ans: 2, exp: 'Stroke is a time-sensitive emergency — "Time is brain." Prompt transport to a stroke center is critical.' },
+  { q: 'What blood glucose finding is most critical for an endocrine emergency?', opts: ['SpO2 level', 'Blood glucose (BGL)', 'Capillary refill time', 'Respiratory rate'], ans: 1, exp: 'BGL measurement is the most actionable endocrine assessment — hypoglycemia can mimic many other conditions and is easily treated.' },
+  { q: 'BE-FAST is a stroke screening tool. What does the "F" stand for?', opts: ['Fever', 'Face droop', 'Feeling dizzy', 'Focal deficit'], ans: 1, exp: 'BE-FAST: Balance, Eyes, Face droop, Arm drift, Speech, Time to call 911.' },
+  { q: 'When should you call for additional resources during Scene Size-Up?', opts: ['After completing primary assessment', 'Before entering any scene', 'Early — before you need them', 'Only for trauma patients'], ans: 2, exp: 'Call for help early — it is far easier to cancel resources than to wait for delayed backup when a patient deteriorates.' },
+  { q: 'DCAP-BTLS is used during which type of assessment?', opts: ['Medical history', 'Trauma physical exam', 'Vital sign assessment', 'Scene size-up'], ans: 1, exp: 'DCAP-BTLS (Deformities, Contusions, Abrasions, Penetrations, Burns, Tenderness, Lacerations, Swelling) guides the trauma physical exam.' },
+  { q: 'What does MOI stand for?', opts: ['Method of Intervention', 'Mechanism of Injury', 'Mode of Illness', 'Management of Incident'], ans: 1, exp: 'MOI — Mechanism of Injury. Understanding how a trauma occurred helps predict injury patterns and guides your exam.' },
+];
+
+let quizIdx = 0, quizScore = 0, quizAnswered = false;
+let quizQuestions = [];
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function startQuiz() {
+  quizQuestions = shuffle(quizData).slice(0, 10);
+  quizIdx = 0; quizScore = 0;
+  document.getElementById('quiz-overlay').classList.add('active');
+  renderQuestion();
+}
+
+function closeQuiz() {
+  document.getElementById('quiz-overlay').classList.remove('active');
+}
+
+function renderQuestion() {
+  const q = quizQuestions[quizIdx];
+  quizAnswered = false;
+  document.getElementById('quiz-meta').textContent = `Question ${quizIdx + 1} of ${quizQuestions.length}`;
+  document.getElementById('quiz-score').textContent = `${quizScore} / ${quizIdx}`;
+  document.getElementById('quiz-progress').style.width = `${(quizIdx / quizQuestions.length) * 100}%`;
+  document.getElementById('quiz-q').textContent = q.q;
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-next').style.display = 'none';
+
+  const opts = document.getElementById('quiz-opts');
+  opts.innerHTML = '';
+  const order = shuffle(q.opts.map((o,i) => ({ o, i })));
+  order.forEach(({ o, i }) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.textContent = o;
+    btn.onclick = () => answer(i, q, order);
+    opts.appendChild(btn);
+  });
+}
+
+function answer(chosen, q, order) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const correct = chosen === q.ans;
+  if (correct) quizScore++;
+
+  document.querySelectorAll('.quiz-opt').forEach((btn, idx) => {
+    const origIdx = order[idx].i;
+    if (origIdx === q.ans) btn.classList.add('correct');
+    else if (origIdx === chosen && !correct) btn.classList.add('wrong');
+    else btn.classList.add('reveal');
+  });
+
+  document.getElementById('quiz-feedback').textContent = correct
+    ? `✓ Correct! ${q.exp}`
+    : `✗ Not quite. ${q.exp}`;
+  document.getElementById('quiz-score').textContent = `${quizScore} / ${quizIdx + 1}`;
+  document.getElementById('quiz-next').style.display = 'block';
+  document.getElementById('quiz-next').textContent = quizIdx + 1 < quizQuestions.length ? 'Next question →' : 'See results';
+}
+
+function nextQuestion() {
+  quizIdx++;
+  if (quizIdx >= quizQuestions.length) {
+    const pct = Math.round((quizScore / quizQuestions.length) * 100);
+    const grade = pct >= 90 ? '🏅 Excellent!' : pct >= 70 ? '👍 Good work!' : '📖 Keep studying!';
+    document.getElementById('quiz-q').textContent = `${grade} You scored ${quizScore} out of ${quizQuestions.length} (${pct}%)`;
+    document.getElementById('quiz-opts').innerHTML = '';
+    document.getElementById('quiz-feedback').textContent = 'Tap "Exit quiz" to return to the reference, or retake to try again.';
+    document.getElementById('quiz-next').textContent = 'Retake quiz';
+    document.getElementById('quiz-next').onclick = () => startQuiz();
+    document.getElementById('quiz-progress').style.width = '100%';
+    document.getElementById('quiz-score').textContent = `${quizScore} / ${quizQuestions.length}`;
+    return;
+  }
+  renderQuestion();
+}
+
+// close quiz on backdrop click
+document.getElementById('quiz-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeQuiz();
+});
+</script>
+</body>
+</html>
